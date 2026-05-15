@@ -1,7 +1,7 @@
 {
   "name": "@profullstack/autoblog",
-  "version": "0.1.0",
-  "description": "CloudEvents + Standard Webhooks SDK for autoblog publishing. Build and send normalized post-published events from a CMS or AI writer; verify and parse them in your blog receiver.",
+  "version": "0.2.0",
+  "description": "CloudEvents + Standard Webhooks SDK for autoblog publishing. Build and send normalized post-published events from a CMS or AI writer; verify, parse, and quality-gate them in your blog receiver.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,13 +11,9 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./micropub": {
-      "import": "./dist/micropub.js",
-      "types": "./dist/micropub.d.ts"
-    },
-    "./activitypub": {
-      "import": "./dist/activitypub/index.js",
-      "types": "./dist/activitypub/index.d.ts"
+    "./quality": {
+      "import": "./dist/quality.js",
+      "types": "./dist/quality.d.ts"
     }
   },
   "files": [
