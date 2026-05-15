@@ -1,3 +1,44 @@
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/index.ts
+var src_exports = {};
+__export(src_exports, {
+  EVENT_TYPES: () => EVENT_TYPES,
+  buildEvent: () => buildEvent,
+  sendWebhook: () => sendWebhook,
+  signRequest: () => signRequest,
+  verifyAndParse: () => verifyAndParse,
+  verifySignature: () => verifySignature
+});
+module.exports = __toCommonJS(src_exports);
+
 // src/types.ts
 var EVENT_TYPES = {
   POST_PUBLISHED: "post.published.v1",
@@ -7,7 +48,7 @@ var EVENT_TYPES = {
 };
 
 // src/sign.ts
-import crypto from "crypto";
+var import_node_crypto = __toESM(require("crypto"), 1);
 var SIG_VERSION = "v1";
 function signRequest(input) {
   const { id, timestamp, body, secret } = input;
@@ -15,7 +56,7 @@ function signRequest(input) {
   if (!Number.isFinite(timestamp)) throw new Error("signRequest: timestamp required");
   if (!secret) throw new Error("signRequest: secret required");
   const toSign = `${id}.${timestamp}.${body}`;
-  const mac = crypto.createHmac("sha256", secret).update(toSign).digest("base64");
+  const mac = import_node_crypto.default.createHmac("sha256", secret).update(toSign).digest("base64");
   return {
     "webhook-id": id,
     "webhook-timestamp": String(timestamp),
@@ -66,11 +107,11 @@ function verifySignature(input) {
 function timingSafeStringEqual(a, b) {
   if (typeof a !== "string" || typeof b !== "string") return false;
   if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  return import_node_crypto.default.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 }
 
 // src/sender.ts
-import crypto2 from "crypto";
+var import_node_crypto2 = __toESM(require("crypto"), 1);
 var DEFAULT_TIMEOUT_MS = 1e4;
 var DEFAULT_USER_AGENT = "@profullstack/autoblog/0.1";
 var DEFAULT_RETRY_DELAYS_MS = [0, 1e4, 6e4];
@@ -83,7 +124,7 @@ function reverseDns(source) {
   }
 }
 function buildEvent(post, opts) {
-  const eventId = opts.eventId ?? crypto2.randomUUID();
+  const eventId = opts.eventId ?? import_node_crypto2.default.randomUUID();
   const type = opts.type ?? `${reverseDns(opts.source)}.post.published.v1`;
   return {
     specversion: "1.0",
@@ -159,7 +200,7 @@ async function sendWebhook(url, event, opts) {
 }
 
 // src/receiver.ts
-import { timingSafeEqual } from "crypto";
+var import_node_crypto3 = require("crypto");
 function pickHeader2(headers, name) {
   const lower = name.toLowerCase();
   for (const k of Object.keys(headers)) {
@@ -176,7 +217,7 @@ function bearerMatches(provided, expected) {
   const a = Buffer.from(provided);
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+  return (0, import_node_crypto3.timingSafeEqual)(a, b);
 }
 function isValidPost(p) {
   if (!p || typeof p !== "object") return false;
@@ -228,12 +269,13 @@ function verifyAndParse(input) {
     post: parsed.data.post
   };
 }
-export {
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
   EVENT_TYPES,
   buildEvent,
   sendWebhook,
   signRequest,
   verifyAndParse,
   verifySignature
-};
-//# sourceMappingURL=index.js.map
+});
+//# sourceMappingURL=index.cjs.map

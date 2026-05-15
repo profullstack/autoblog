@@ -1,5 +1,5 @@
-import { S as SignedHeaders, P as Post, b as PostPublishedEvent } from './types-Bky-agAM.js';
-export { A as Author, C as CloudEvent, E as EVENT_TYPES, a as EventType, F as FeaturedImage, c as PostStatus } from './types-Bky-agAM.js';
+import { S as SignedHeaders, P as Post, b as PostPublishedEvent } from './types-Bky-agAM.cjs';
+export { A as Author, C as CloudEvent, E as EVENT_TYPES, a as EventType, F as FeaturedImage, c as PostStatus } from './types-Bky-agAM.cjs';
 
 type SignInput = {
     id: string;

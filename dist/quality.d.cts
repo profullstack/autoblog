@@ -1,4 +1,4 @@
-import { P as Post } from './types-Bky-agAM.js';
+import { P as Post } from './types-Bky-agAM.cjs';
 
 type HeuristicConfig = {
     /** Reject if word count is below this. Default 500. */
