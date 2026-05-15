@@ -1,0 +1,55 @@
+{
+  "name": "@profullstack/autoblog",
+  "version": "0.1.0",
+  "description": "CloudEvents + Standard Webhooks SDK for autoblog publishing. Build and send normalized post-published events from a CMS or AI writer; verify and parse them in your blog receiver.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./micropub": {
+      "import": "./dist/micropub.js",
+      "types": "./dist/micropub.d.ts"
+    },
+    "./activitypub": {
+      "import": "./dist/activitypub/index.js",
+      "types": "./dist/activitypub/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "webhook",
+    "cloudevents",
+    "standard-webhooks",
+    "blog",
+    "autoblog",
+    "crawlproof"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/profullstack/autoblog.git"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.6"
+  }
+}
