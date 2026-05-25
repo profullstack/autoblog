@@ -47,6 +47,17 @@ describe("scoreHeuristics", () => {
     expect(r.failed.join(" ")).toMatch(/link density/);
   });
 
+  it("ignores same-page fragment anchors for link density", () => {
+    const toc = "<a href='#intro'>Intro</a> ".repeat(40);
+    const external = "<a href='https://example.com'>source</a>";
+    const filler = "word ".repeat(600);
+    const r = scoreHeuristics(
+      makePost({ html: `<p>${toc}${external}${filler}</p>` }),
+    );
+    expect(r.pass).toBe(true);
+    expect(r.metrics.linkCount).toBe(1);
+  });
+
   it("respects bannedTerms (case-insensitive)", () => {
     const r = scoreHeuristics(makePost({ title: "Buy CHEAP Viagra now" }), {
       bannedTerms: ["viagra"],

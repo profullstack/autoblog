@@ -12,6 +12,21 @@ function countAttrs(s, tag) {
   const m = s.match(re);
   return m ? m.length : 0;
 }
+function countContentLinks(s) {
+  if (!s) return 0;
+  const re = /<a\b([^>]*)>/gi;
+  let count = 0;
+  let match;
+  while (match = re.exec(s)) {
+    const href = (match[1] ?? "").match(
+      /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i
+    );
+    const value = (href?.[1] ?? href?.[2] ?? href?.[3] ?? "").trim();
+    if (!value || value.startsWith("#")) continue;
+    count++;
+  }
+  return count;
+}
 function scoreHeuristics(post, config = {}) {
   const min = config.minWordCount ?? 500;
   const max = config.maxWordCount ?? 12e3;
@@ -19,7 +34,7 @@ function scoreHeuristics(post, config = {}) {
   const banned = (config.bannedTerms ?? []).map((s) => s.toLowerCase());
   const maxImages = config.maxImages ?? 20;
   const wordCount = countWords(post.html || "");
-  const linkCount = countAttrs(post.html || "", "a");
+  const linkCount = countContentLinks(post.html || "");
   const imageCount = countAttrs(post.html || "", "img");
   const linkDensity = wordCount > 0 ? linkCount / wordCount * 100 : 0;
   const failed = [];
