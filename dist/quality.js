@@ -30,7 +30,7 @@ function countContentLinks(s) {
 function scoreHeuristics(post, config = {}) {
   const min = config.minWordCount ?? 500;
   const max = config.maxWordCount ?? 12e3;
-  const maxLinkDensity = config.maxLinkDensity ?? 1;
+  const maxLinkDensity = config.maxLinkDensity ?? Number.POSITIVE_INFINITY;
   const banned = (config.bannedTerms ?? []).map((s) => s.toLowerCase());
   const maxImages = config.maxImages ?? 20;
   const wordCount = countWords(post.html || "");

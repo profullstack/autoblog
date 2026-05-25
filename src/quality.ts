@@ -77,7 +77,7 @@ function countContentLinks(s: string): number {
 export function scoreHeuristics(post: Post, config: HeuristicConfig = {}): HeuristicResult {
   const min = config.minWordCount ?? 500;
   const max = config.maxWordCount ?? 12000;
-  const maxLinkDensity = config.maxLinkDensity ?? 1.0;
+  const maxLinkDensity = config.maxLinkDensity ?? Number.POSITIVE_INFINITY;
   const banned = (config.bannedTerms ?? []).map((s) => s.toLowerCase());
   const maxImages = config.maxImages ?? 20;
 

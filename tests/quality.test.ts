@@ -42,9 +42,17 @@ describe("scoreHeuristics", () => {
     const filler = "word ".repeat(600);
     const r = scoreHeuristics(
       makePost({ html: `<p>${links}${filler}</p>` }),
+      { maxLinkDensity: 1.0 },
     );
     expect(r.pass).toBe(false);
     expect(r.failed.join(" ")).toMatch(/link density/);
+  });
+
+  it("does not gate link density by default", () => {
+    const links = "<a href='x'>l</a> ".repeat(40);
+    const filler = "word ".repeat(600);
+    const r = scoreHeuristics(makePost({ html: `<p>${links}${filler}</p>` }));
+    expect(r.pass).toBe(true);
   });
 
   it("ignores same-page fragment anchors for link density", () => {
