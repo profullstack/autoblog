@@ -16,6 +16,7 @@ export default defineConfig({
   entry: {
     index: "src/index.ts",
     quality: "src/quality.ts",
+    feeds: "src/feeds.ts",
   },
   format: ["esm", "cjs"],
   dts: true,
