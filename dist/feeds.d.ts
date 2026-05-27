@@ -10,6 +10,8 @@ type FeedItem = {
     html?: string | null;
     /** Featured image URL — emitted as <enclosure> when present. */
     imageUrl?: string | null;
+    /** Tags emitted as <category> elements. */
+    categories?: string[] | null;
 };
 type SitemapChangeFreq = "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
 type SitemapEntry = {
@@ -46,6 +48,9 @@ type BuildRssXmlOpts = {
     language?: string;
     /** Cap items emitted. Default 50. */
     maxItems?: number;
+    /** WebSub hub URL — emits `<atom:link rel="hub">` so subscribers can
+     *  switch from polling to push. https://www.w3.org/TR/websub/ */
+    hubUrl?: string;
     posts: FeedItem[];
 };
 declare function buildRssXml(opts: BuildRssXmlOpts): string;

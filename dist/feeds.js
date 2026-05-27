@@ -50,14 +50,18 @@ function buildRssXml(opts) {
       <content:encoded>${cdata(p.html)}</content:encoded>` : "";
     const enclosure = p.imageUrl ? `
       <enclosure url="${escapeXml(p.imageUrl)}" type="image/jpeg" length="0" />` : "";
+    const categories = (p.categories ?? []).map((c) => `
+      <category>${escapeXml(c)}</category>`).join("");
     return `    <item>
       <title>${escapeXml(p.title)}</title>
       <link>${escapeXml(url)}</link>
       <guid isPermaLink="true">${escapeXml(url)}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description>${description}</description>${enclosure}${content}
+      <description>${description}</description>${categories}${enclosure}${content}
     </item>`;
   }).join("\n");
+  const hubLink = opts.hubUrl ? `
+    <atom:link href="${escapeXml(opts.hubUrl)}" rel="hub" />` : "";
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
@@ -66,7 +70,7 @@ function buildRssXml(opts) {
     <description>${escapeXml(opts.description)}</description>
     <language>${escapeXml(language)}</language>
     <lastBuildDate>${lastBuild}</lastBuildDate>
-    <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml" />
+    <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml" />${hubLink}
 ${itemXml}
   </channel>
 </rss>

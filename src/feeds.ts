@@ -21,6 +21,8 @@ export type FeedItem = {
   html?: string | null;
   /** Featured image URL — emitted as <enclosure> when present. */
   imageUrl?: string | null;
+  /** Tags emitted as <category> elements. */
+  categories?: string[] | null;
 };
 
 export type SitemapChangeFreq =
@@ -100,6 +102,9 @@ export type BuildRssXmlOpts = {
   language?: string;
   /** Cap items emitted. Default 50. */
   maxItems?: number;
+  /** WebSub hub URL — emits `<atom:link rel="hub">` so subscribers can
+   *  switch from polling to push. https://www.w3.org/TR/websub/ */
+  hubUrl?: string;
   posts: FeedItem[];
 };
 
@@ -153,15 +158,22 @@ export function buildRssXml(opts: BuildRssXmlOpts): string {
       const enclosure = p.imageUrl
         ? `\n      <enclosure url="${escapeXml(p.imageUrl)}" type="image/jpeg" length="0" />`
         : "";
+      const categories = (p.categories ?? [])
+        .map((c) => `\n      <category>${escapeXml(c)}</category>`)
+        .join("");
       return `    <item>
       <title>${escapeXml(p.title)}</title>
       <link>${escapeXml(url)}</link>
       <guid isPermaLink="true">${escapeXml(url)}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description>${description}</description>${enclosure}${content}
+      <description>${description}</description>${categories}${enclosure}${content}
     </item>`;
     })
     .join("\n");
+
+  const hubLink = opts.hubUrl
+    ? `\n    <atom:link href="${escapeXml(opts.hubUrl)}" rel="hub" />`
+    : "";
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -171,7 +183,7 @@ export function buildRssXml(opts: BuildRssXmlOpts): string {
     <description>${escapeXml(opts.description)}</description>
     <language>${escapeXml(language)}</language>
     <lastBuildDate>${lastBuild}</lastBuildDate>
-    <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml" />
+    <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml" />${hubLink}
 ${itemXml}
   </channel>
 </rss>

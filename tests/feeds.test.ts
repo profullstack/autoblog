@@ -148,6 +148,30 @@ describe("buildRssXml", () => {
     );
   });
 
+  it("emits <category> per tag", () => {
+    const xml = buildRssXml({
+      title: "t",
+      description: "d",
+      siteUrl: "https://example.com",
+      posts: [makeItem({ categories: ["security", "ai & ml"] })],
+    });
+    expect(xml).toContain("<category>security</category>");
+    expect(xml).toContain("<category>ai &amp; ml</category>");
+  });
+
+  it("emits atom:link rel=hub when hubUrl is set", () => {
+    const xml = buildRssXml({
+      title: "t",
+      description: "d",
+      siteUrl: "https://example.com",
+      hubUrl: "https://pubsubhubbub.appspot.com/",
+      posts: [makeItem()],
+    });
+    expect(xml).toContain(
+      '<atom:link href="https://pubsubhubbub.appspot.com/" rel="hub" />',
+    );
+  });
+
   it("uses custom feedUrl when provided", () => {
     const xml = buildRssXml({
       title: "t",
