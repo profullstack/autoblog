@@ -4,3 +4,4 @@ node_modules
 .env.local
 coverage
 .DS_Store
+profullstack-autoblog-*.tgz
