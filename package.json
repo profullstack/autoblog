@@ -1,6 +1,6 @@
 {
   "name": "@profullstack/autoblog",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "CloudEvents + Standard Webhooks SDK for autoblog publishing. Build and send normalized post-published events from a CMS or AI writer; verify, parse, and quality-gate them in your blog receiver.",
   "license": "MIT",
   "type": "module",
@@ -65,6 +65,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/profullstack/autoblog.git"
+  },
+  "dependencies": {
+    "@profullstack/ai-providers": "0.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",

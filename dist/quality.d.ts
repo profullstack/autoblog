@@ -1,4 +1,4 @@
-import { P as Post } from './types-Bky-agAM.js';
+import { P as Post } from './types-T7gU2CrZ.js';
 
 type HeuristicConfig = {
     /** Reject if word count is below this. Default 500. */
@@ -33,19 +33,38 @@ type QualityScore = {
     score: number | null;
     reasons: string[];
     error?: string;
+    /** Which provider answered: "c0mpute", "openai" or "anthropic". */
+    provider?: string;
+    /** The model that answered. */
+    model?: string;
 };
 type ScoreQualityInput = {
     post: Post;
     /** Optional niche context to bias the model's "relevance" axis. */
     niche?: string | string[];
-    /** Anthropic API key. */
-    anthropicApiKey: string;
-    /** Override model — defaults to claude-haiku-4-5-20251001. */
+    /**
+     * Anthropic API key, used only for the paid fallback. Optional: c0mpute
+     * needs no key, so leaving this out still scores.
+     */
+    anthropicApiKey?: string;
+    /** OpenAI API key for the other paid fallback. Optional. */
+    openaiApiKey?: string;
+    /** Override the model on the paid fallback. */
     model?: string;
-    /** Override fetch (testing). */
+    /** Override fetch (testing). Applies to every provider. */
     fetchImpl?: typeof fetch;
-    /** Override timeout in ms (default 15s). */
+    /** Override timeout in ms (default 120s - a peer node is slower than Haiku). */
     timeoutMs?: number;
+    /** Pre-built router, for tests or an app that already has one. */
+    ai?: AiRouterLike;
+};
+/** The slice of @profullstack/ai-providers' AiRouter this module uses. */
+type AiRouterLike = {
+    generateObject(req: Record<string, unknown>): Promise<{
+        object: unknown;
+        provider: string;
+        model: string;
+    }>;
 };
 declare function scoreQuality(input: ScoreQualityInput): Promise<QualityScore>;
 type GateConfig = {
@@ -55,8 +74,13 @@ type GateConfig = {
     allowedNiches?: string[];
     /** Minimum quality score 0–10. Skip LLM call if undefined. */
     minQualityScore?: number;
-    /** Anthropic API key for the LLM gate. Required iff minQualityScore is set. */
+    /**
+     * Anthropic API key for the paid fallback. Optional - the gate runs on
+     * c0mpute, which needs no key.
+     */
     anthropicApiKey?: string;
+    /** OpenAI API key for the other paid fallback. Optional. */
+    openaiApiKey?: string;
     /** Fail-open behavior when the LLM call errors. Default true. */
     failOpenOnLlmError?: boolean;
 };
@@ -73,4 +97,4 @@ type GateOutcome = {
 };
 declare function gatePost(post: Post, config: GateConfig): Promise<GateOutcome>;
 
-export { type GateConfig, type GateOutcome, type HeuristicConfig, type HeuristicResult, type QualityScore, type ScoreQualityInput, gatePost, nicheMatches, scoreHeuristics, scoreQuality };
+export { type AiRouterLike, type GateConfig, type GateOutcome, type HeuristicConfig, type HeuristicResult, type QualityScore, type ScoreQualityInput, gatePost, nicheMatches, scoreHeuristics, scoreQuality };
