@@ -124,62 +124,119 @@ describe("nicheMatches", () => {
   });
 });
 
-describe("scoreQuality (mocked fetch)", () => {
-  function mockApi(body: any, status = 200): typeof fetch {
-    return (async () =>
-      new Response(JSON.stringify(body), {
-        status,
-        headers: { "content-type": "application/json" },
-      })) as unknown as typeof fetch;
+describe("scoreQuality (c0mpute wire, mocked fetch)", () => {
+  /**
+   * Fakes the two calls C0mputeProvider makes: POST /api/chat for a job, then
+   * the SSE stream. Proves this module is wired to the package correctly,
+   * fence-stripping and all.
+   */
+  function mockC0mpute(answer: string, opts: { status?: number } = {}): typeof fetch {
+    return (async (url: string | URL | Request) => {
+      const u = String(url);
+      if (u.endsWith("/api/chat")) {
+        if (opts.status && opts.status !== 200) {
+          return new Response(JSON.stringify({ error: "nope" }), {
+            status: opts.status,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        return new Response(
+          JSON.stringify({ jobId: "job-1", source: "p2p", model: "qwen2.5:7b" }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      const sse =
+        `event: meta\ndata: {"model":"qwen2.5:7b"}\n\n` +
+        `event: token\ndata: ${JSON.stringify({ text: answer })}\n\n` +
+        `event: done\ndata: {}\n\n`;
+      return new Response(sse, {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      });
+    }) as unknown as typeof fetch;
   }
 
-  it("parses a valid {score, reasons} response", async () => {
+  it("parses a valid {score, reasons} answer from c0mpute", async () => {
     const r = await scoreQuality({
       post: makePost(),
-      anthropicApiKey: "k",
-      fetchImpl: mockApi({
-        content: [{ type: "text", text: '{"score":7,"reasons":["solid","useful"]}' }],
-      }),
+      fetchImpl: mockC0mpute('{"score":7,"reasons":["solid","useful"]}'),
     });
     expect(r.ok).toBe(true);
     expect(r.score).toBe(7);
     expect(r.reasons).toEqual(["solid", "useful"]);
+    expect(r.provider).toBe("c0mpute");
   });
 
   it("strips code fences around JSON", async () => {
     const r = await scoreQuality({
       post: makePost(),
-      anthropicApiKey: "k",
-      fetchImpl: mockApi({
-        content: [
-          { type: "text", text: '```json\n{"score":4,"reasons":["thin"]}\n```' },
-        ],
-      }),
+      fetchImpl: mockC0mpute('```json\n{"score":4,"reasons":["thin"]}\n```'),
     });
     expect(r.ok).toBe(true);
     expect(r.score).toBe(4);
   });
 
-  it("fails closed (ok:false) on non-200", async () => {
+  it("clamps out-of-range scores", async () => {
     const r = await scoreQuality({
       post: makePost(),
-      anthropicApiKey: "k",
-      fetchImpl: mockApi({ error: "nope" }, 500),
+      fetchImpl: mockC0mpute('{"score":42,"reasons":["clamp"]}'),
+    });
+    expect(r.ok).toBe(true);
+    expect(r.score).toBe(10);
+  });
+
+  it("fails open (ok:false) when every provider errors", async () => {
+    const r = await scoreQuality({
+      post: makePost(),
+      fetchImpl: mockC0mpute("", { status: 500 }),
+    });
+    expect(r.ok).toBe(false);
+    expect(r.score).toBeNull();
+    expect(r.error).toBeTruthy();
+  });
+
+  it("never throws, even when fetch itself blows up", async () => {
+    const r = await scoreQuality({
+      post: makePost(),
+      fetchImpl: (async () => {
+        throw new Error("socket hang up");
+      }) as unknown as typeof fetch,
     });
     expect(r.ok).toBe(false);
     expect(r.score).toBeNull();
   });
+});
 
-  it("clamps out-of-range scores", async () => {
+describe("scoreQuality (injected router)", () => {
+  const router = (object: unknown, provider = "c0mpute") => ({
+    generateObject: async () => ({ object, provider, model: "test-model" }),
+  });
+
+  it("reports which provider answered", async () => {
     const r = await scoreQuality({
       post: makePost(),
-      anthropicApiKey: "k",
-      fetchImpl: mockApi({
-        content: [{ type: "text", text: '{"score":42,"reasons":["clamp"]}' }],
-      }),
+      ai: router({ score: 9, reasons: ["novel"] }, "anthropic"),
     });
     expect(r.ok).toBe(true);
-    expect(r.score).toBe(10);
+    expect(r.score).toBe(9);
+    expect(r.provider).toBe("anthropic");
+    expect(r.model).toBe("test-model");
+  });
+
+  it("rejects an answer with no usable score", async () => {
+    const r = await scoreQuality({
+      post: makePost(),
+      ai: router({ reasons: ["no score"] }),
+    });
+    expect(r.ok).toBe(false);
+    expect(r.score).toBeNull();
+    expect(r.reasons).toEqual(["no score"]);
+  });
+
+  it("needs no API key at all", async () => {
+    const r = await scoreQuality({ post: makePost(), ai: router({ score: 5 }) });
+    expect(r.ok).toBe(true);
+    expect(r.score).toBe(5);
   });
 });
 

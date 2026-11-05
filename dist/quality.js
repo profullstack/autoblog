@@ -1,4 +1,5 @@
 // src/quality.ts
+import { createAiProviders } from "@profullstack/ai-providers";
 var WORD_RE = /\b[\p{L}\p{N}'’-]+\b/gu;
 function countWords(s) {
   if (!s) return 0;
@@ -78,7 +79,15 @@ function nicheMatches(post, allowedNiches) {
   }
   return { pass: matched.length > 0, matched };
 }
-var DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+var DEFAULT_TIMEOUT_MS = 12e4;
+var SCORE_SCHEMA = {
+  type: "object",
+  properties: {
+    score: { type: "integer", minimum: 0, maximum: 10 },
+    reasons: { type: "array", items: { type: "string" }, maxItems: 3 }
+  },
+  required: ["score"]
+};
 function buildScorePrompt(post, niche) {
   const nicheStr = Array.isArray(niche) ? niche.join(", ") : niche;
   return [
@@ -107,51 +116,34 @@ function clamp(n, lo, hi) {
   return Math.max(lo, Math.min(hi, Math.round(n)));
 }
 async function scoreQuality(input) {
-  const fetchImpl = input.fetchImpl ?? fetch;
-  const model = input.model ?? DEFAULT_MODEL;
-  const timeoutMs = input.timeoutMs ?? 15e3;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutMs = input.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   try {
-    const res = await fetchImpl("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": input.anthropicApiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model,
-        max_tokens: 200,
-        messages: [
-          { role: "user", content: buildScorePrompt(input.post, input.niche) }
-        ]
-      })
+    const ai = input.ai ?? createAiProviders({
+      ...input.fetchImpl ? {
+        c0mpute: { fetch: input.fetchImpl },
+        openai: { fetch: input.fetchImpl },
+        anthropic: { fetch: input.fetchImpl }
+      } : {},
+      ...input.openaiApiKey ? { openai: { apiKey: input.openaiApiKey } } : {},
+      ...input.anthropicApiKey ? { anthropic: { apiKey: input.anthropicApiKey, ...input.model ? { model: input.model } : {} } } : {}
     });
-    if (!res.ok) {
-      const text2 = await res.text().catch(() => "");
-      return { ok: false, score: null, reasons: [], error: `HTTP ${res.status}: ${text2.slice(0, 200)}` };
-    }
-    const data = await res.json();
-    const text = data.content?.find((c) => c.type === "text")?.text ?? "";
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) {
-      return { ok: false, score: null, reasons: [], error: "no JSON in response" };
-    }
-    let parsed;
-    try {
-      parsed = JSON.parse(match[0]);
-    } catch (err) {
-      return { ok: false, score: null, reasons: [], error: `bad JSON: ${err.message}` };
-    }
-    const obj = parsed;
+    const res = await ai.generateObject({
+      system: "You rate blog posts. You answer with one JSON object and nothing else.",
+      user: buildScorePrompt(input.post, input.niche),
+      name: "QualityScore",
+      jsonSchema: SCORE_SCHEMA,
+      maxTokens: 300,
+      temperature: 0,
+      feature: "autoblog.scoreQuality",
+      timeoutMs
+    });
+    const obj = res.object ?? {};
     const score = clamp(obj.score, 0, 10);
     const reasons = Array.isArray(obj.reasons) ? obj.reasons.filter((r) => typeof r === "string").slice(0, 5) : [];
     if (score === null) {
       return { ok: false, score: null, reasons, error: "score field missing or not a number" };
     }
-    return { ok: true, score, reasons };
+    return { ok: true, score, reasons, provider: res.provider, model: res.model };
   } catch (err) {
     return {
       ok: false,
@@ -159,8 +151,6 @@ async function scoreQuality(input) {
       reasons: [],
       error: err instanceof Error ? err.message : String(err)
     };
-  } finally {
-    clearTimeout(timer);
   }
 }
 async function gatePost(post, config) {
@@ -179,11 +169,12 @@ async function gatePost(post, config) {
       metrics: heur.metrics
     };
   }
-  if (config.minQualityScore !== void 0 && config.anthropicApiKey) {
+  if (config.minQualityScore !== void 0) {
     const q = await scoreQuality({
       post,
       niche: config.allowedNiches,
-      anthropicApiKey: config.anthropicApiKey
+      ...config.anthropicApiKey ? { anthropicApiKey: config.anthropicApiKey } : {},
+      ...config.openaiApiKey ? { openaiApiKey: config.openaiApiKey } : {}
     });
     if (!q.ok) {
       if (config.failOpenOnLlmError !== false) {

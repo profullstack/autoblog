@@ -51,4 +51,4 @@ type SignedHeaders = {
     "webhook-signature": string;
 };
 
-export { type Author as A, type CloudEvent as C, EVENT_TYPES as E, type FeaturedImage as F, type Post as P, type SignedHeaders as S, type EventType as a, type PostPublishedEvent as b, type PostStatus as c };
+export { type Author as A, type CloudEvent as C, EVENT_TYPES as E, type FeaturedImage as F, type Post as P, type SignedHeaders as S, type PostPublishedEvent as a, type EventType as b, type PostStatus as c };
