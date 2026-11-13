@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@profullstack/ai-providers':
-        specifier: 0.1.0
-        version: 0.1.0
+        specifier: ^0.3.1
+        version: 0.3.1
     devDependencies:
       '@types/node':
         specifier: ^22.9.0
@@ -215,8 +215,8 @@ packages:
   '@oxc-project/types@0.142.0':
     resolution: {integrity: sha512-7W+2q5AKQVU36fkaryontrHn3YDt1RyUYXatw9i5H8ocYe2sPKSFB6eS8WNPeRKiN1qAWWZUPm7gwFzJGrccqQ==}
 
-  '@profullstack/ai-providers@0.1.0':
-    resolution: {integrity: sha512-vc7aFjozyiwIhREWLhB3xWpUPeGggM348ng5W6j4IA+gxYF3S7TNLoGWrF/ax2NttsK40C801CRkD9JSVA4aOg==}
+  '@profullstack/ai-providers@0.3.1':
+    resolution: {integrity: sha512-mihwPJnGfBW52GRloG74bhmSokAdXBrMj/wDqOSxCcoj55n6nhe1c2/498BRuq/D0CyXXdVPe1VmHviWd4jMoA==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -1057,7 +1057,7 @@ snapshots:
 
   '@oxc-project/types@0.142.0': {}
 
-  '@profullstack/ai-providers@0.1.0': {}
+  '@profullstack/ai-providers@0.3.1': {}
 
   '@rolldown/binding-android-arm64@1.2.1':
     optional: true
